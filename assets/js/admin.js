@@ -940,19 +940,29 @@ window.logout = logout;
 if(loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const btn = loginForm.querySelector('button');
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const btn = document.getElementById('loginBtn');
         
-        btn.textContent = 'Membuka Kunci...';
-        btn.disabled = true;
+        if(btn) {
+            btn.textContent = 'Membuka Kunci...';
+            btn.disabled = true;
+        }
 
         auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                // Success handled by onAuthStateChanged
+            })
             .catch(error => {
-                loginError.textContent = "Email atau Password salah!";
-                loginError.classList.remove('hidden');
-                btn.textContent = 'Login Admin';
-                btn.disabled = false;
+                console.error("Login Error:", error);
+                if(loginError) {
+                    loginError.textContent = "Email atau Password salah!";
+                    loginError.classList.remove('hidden'); 
+                }
+                if(btn) {
+                    btn.textContent = 'Login';
+                    btn.disabled = false;
+                }
             });
     });
 }
