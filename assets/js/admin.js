@@ -20,8 +20,9 @@ let currentSortCol = 'tglMulai';
 let currentSortDir = 'asc';
 let cachedJadwalData = [];
 let cachedMateriData = [];
+let cachedWebinarData = [];
 let deleteTargetId = null; 
-let deleteTargetType = 'jadwal'; // 'jadwal' or 'materi'
+let deleteTargetType = 'jadwal'; // 'jadwal' or 'materi', 'webinar'
 
 const imageMap = {
   PAUD:       'https://i.ibb.co.com/gMjGGm9C/1.png',
@@ -51,51 +52,63 @@ auth.onAuthStateChanged(async (user) => {
         
         // 1. Listen to JADWAL
         db.collection("jadwal").onSnapshot((snapshot) => {
-            const list = [];
-            snapshot.forEach(doc => {
-                let item = doc.data();
-                item.id = doc.id;
-                list.push(item);
-            });
-            cachedJadwalData = list;
-            loadTable();
+            try {
+                const list = [];
+                snapshot.forEach(doc => {
+                    let item = doc.data();
+                    item.id = doc.id;
+                    list.push(item);
+                });
+                cachedJadwalData = list;
+                loadTable();
+            } catch (err) {
+                console.error("Jadwal Listener Error:", err);
+            }
         });
 
         // 2. Listen to MATERI (Unified for Dashboard & Table)
         db.collection("materi").onSnapshot((snapshot) => {
-            const list = [];
-            snapshot.forEach(doc => {
-                let item = doc.data();
-                item.id = doc.id;
-                list.push(item);
-            });
-            cachedMateriData = list;
-            
-            updateDashboard(); // Update Statistik Dashboard
-            loadTableMateri(); // Update Tabel Materi
-            
-            // Auto-seed if empty
-            if (list.length === 0) {
-                console.log("Database materi kosong, memulai impor otomatis...");
-                autoSeedMateri();
+            try {
+                const list = [];
+                snapshot.forEach(doc => {
+                    let item = doc.data();
+                    item.id = doc.id;
+                    list.push(item);
+                });
+                cachedMateriData = list;
+                
+                updateDashboard(); // Update Statistik Dashboard
+                loadTableMateri(); // Update Tabel Materi
+                
+                // Auto-seed if empty
+                if (list.length === 0) {
+                    console.log("Database materi kosong, memulai impor otomatis...");
+                    autoSeedMateri();
+                }
+            } catch (err) {
+                console.error("Materi Listener Error:", err);
             }
         });
 
         // 3. Listen to WEBINAR
         db.collection("webinars").onSnapshot((snapshot) => {
-            const list = [];
-            snapshot.forEach(doc => {
-                let item = doc.data();
-                item.id = doc.id;
-                list.push(item);
-            });
-            cachedWebinarData = list;
-            loadTableWebinar();
-
-            // Auto-seed if empty
-            if (list.length === 0) {
-                console.log("Database webinar kosong, memulai impor otomatis...");
-                autoSeedWebinars();
+            try {
+                const list = [];
+                snapshot.forEach(doc => {
+                    let item = doc.data();
+                    item.id = doc.id;
+                    list.push(item);
+                });
+                cachedWebinarData = list;
+                loadTableWebinar();
+    
+                // Auto-seed if empty
+                if (list.length === 0) {
+                    console.log("Database webinar kosong, memulai impor otomatis...");
+                    autoSeedWebinars();
+                }
+            } catch (err) {
+                console.error("Webinar Listener Error:", err);
             }
         });
 
@@ -169,8 +182,9 @@ function loadTable() {
     list.sort((a, b) => {
         let valA, valB;
         if (currentSortCol === 'tglMulai') {
-            valA = a.tglMulai ? new Date(a.tglMulai) : (window.parseDateFromText(a.tanggal) || new Date(0));
-            valB = b.tglMulai ? new Date(b.tglMulai) : (window.parseDateFromText(b.tanggal) || new Date(0));
+            const parseFn = (typeof window.parseDateFromText === 'function') ? window.parseDateFromText : (() => null);
+            valA = a.tglMulai ? new Date(a.tglMulai) : (parseFn(a.tanggal) || new Date(0));
+            valB = b.tglMulai ? new Date(b.tglMulai) : (parseFn(b.tanggal) || new Date(0));
             return currentSortDir === 'asc' ? valA - valB : valB - valA;
         } 
         else if (currentSortCol === 'manualStatus') {
