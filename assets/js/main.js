@@ -116,38 +116,45 @@ function setupPopup() {
 const BULAN_MAP = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
 
 window.parseDateFromText = function(str) {
-    if(!str) return null;
+    if(!str || typeof str !== 'string') return null;
     try {
         const parts = str.split(/[–-]/).map(s => s.trim());
         const lastPart = parts[parts.length - 1]; 
+        if(!lastPart) return null;
         const tokens = lastPart.split(/\s+/);
         let year = tokens.find(t => t.length === 4 && !isNaN(t));
         let monthName = tokens.find(t => BULAN_MAP[t]);
         let day = tokens.find(t => !isNaN(t) && t.length <= 2);
         
         if(day && monthName && year) {
-            // Set to end of day (23:59:59) for inclusive date
             return new Date(parseInt(year), BULAN_MAP[monthName]-1, parseInt(day), 23, 59, 59);
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error("Error parsing date:", e);
+    }
     return null;
 }
 
 window.checkIsPast = function(item) {
+    if(!item) return false;
     // 1. Manual Overrides
     if(item.manualStatus === 'tutup') return true;
     if(item.manualStatus === 'buka') return false;
 
-    // 2. Date Check
-    const now = new Date();
-    // Use tglSelesai if available (formatted as YYYY-MM-DD from flatpickr)
-    if(item.tglSelesai) {
-        const end = new Date(item.tglSelesai);
-        end.setHours(23, 59, 59);
-        return end < now;
+    try {
+        const now = new Date();
+        if(item.tglSelesai) {
+            const end = new Date(item.tglSelesai);
+            if(!isNaN(end)) {
+                end.setHours(23, 59, 59);
+                return end < now;
+            }
+        }
+        
+        const endFromText = window.parseDateFromText(item.tanggal);
+        return endFromText ? endFromText < now : false;
+    } catch(e) {
+        console.error("Error checking status:", e);
+        return false;
     }
-    
-    // Fallback to text parsing from "tanggal" field
-    const endFromText = window.parseDateFromText(item.tanggal);
-    return endFromText ? endFromText < now : false;
 }

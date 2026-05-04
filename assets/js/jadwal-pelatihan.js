@@ -81,24 +81,28 @@ function render() {
   } else {
     html += `<div class="grid">`;
     filtered.forEach(d => {
-        const cm = colorMap[d.jenjang] || colorMap['SLB'];
-        const img = imageMap[d.jenjang] || imageMap['SD'];
-        const closed = isPast(d);
-        html += `
-            <div class="card ${closed ? 'card-closed' : ''}">
-                <div class="card-img-wrap"><img src="${img}" alt="${d.jenjang}" loading="lazy" /></div>
-                <div class="card-banner ${cm.banner}"></div>
-                <div class="card-body">
-                    <span class="card-badge ${cm.badge}">${d.jenjang}</span>
-                    <p class="card-title">${d.judul}</p>
-                    <div class="card-info"><div class="card-info-row">${d.tanggal}</div></div>
-                    <span class="kuota-badge">Kuota ${d.kuota} peserta</span>
+        try {
+            const cm = colorMap[d.jenjang] || colorMap['SLB'];
+            const img = imageMap[d.jenjang] || imageMap['SD'];
+            const closed = isPast(d);
+            html += `
+                <div class="card ${closed ? 'card-closed' : ''}">
+                    <div class="card-img-wrap"><img src="${img}" alt="${d.jenjang}" loading="lazy" /></div>
+                    <div class="card-banner ${cm.banner}"></div>
+                    <div class="card-body">
+                        <span class="card-badge ${cm.badge}">${d.jenjang}</span>
+                        <p class="card-title">${d.judul}</p>
+                        <div class="card-info"><div class="card-info-row">${d.tanggal}</div></div>
+                        <span class="kuota-badge">Kuota ${d.kuota} peserta</span>
+                    </div>
+                    <div class="card-footer">
+                        ${closed ? `<span class="btn-daftar ditutup">Pendaftaran Ditutup</span>` : `<a href="${d.link}" class="btn-daftar" target="_blank">Daftar Sekarang</a>`}
+                    </div>
                 </div>
-                <div class="card-footer">
-                    ${closed ? `<span class="btn-daftar ditutup">Pendaftaran Ditutup</span>` : `<a href="${d.link}" class="btn-daftar" target="_blank">Daftar Sekarang</a>`}
-                </div>
-            </div>
-        `;
+            `;
+        } catch (e) {
+            console.error("Error rendering card:", e, d);
+        }
     });
     html += `</div>`;
   }
