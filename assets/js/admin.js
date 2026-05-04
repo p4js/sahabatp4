@@ -68,11 +68,12 @@ function getEffectiveStatus(d) {
     return !internalCheckIsPast(d);
 }
 
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        loginScreen.classList.add('hidden');
-        dashboardScreen.classList.remove('hidden');
-        initCalendars();
+if (auth) {
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            loginScreen.classList.add('hidden');
+            dashboardScreen.classList.remove('hidden');
+            initCalendars();
         
         // 1. Listen to JADWAL
         db.collection("jadwal").onSnapshot((snapshot) => {
@@ -136,11 +137,14 @@ auth.onAuthStateChanged(async (user) => {
             }
         });
 
-    } else {
-        loginScreen.classList.remove('hidden');
-        dashboardScreen.classList.add('hidden');
-    }
-});
+        } else {
+            loginScreen.classList.remove('hidden');
+            dashboardScreen.classList.add('hidden');
+        }
+    });
+} else {
+    console.error("Firebase Auth tidak tersedia.");
+}
 
 function formatTrainingDate(startStr, endStr) {
     if(!startStr || !endStr) return "";
@@ -940,23 +944,38 @@ window.logout = logout;
 if(loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+        const emailInput = document.getElementById('loginEmail');
+        const passInput = document.getElementById('loginPassword');
         const btn = document.getElementById('loginBtn');
         
+        if(!emailInput || !passInput) return;
+        
+        const email = emailInput.value.trim();
+        const password = passInput.value.trim();
+        
         if(btn) {
-            btn.textContent = 'Membuka Kunci...';
+            btn.textContent = 'Memverifikasi...';
             btn.disabled = true;
+        }
+
+        if(!auth) {
+            alert("Layanan Keamanan (Firebase Auth) gagal dimuat. Mohon refresh halaman.");
+            if(btn) { btn.textContent = 'Login'; btn.disabled = false; }
+            return;
         }
 
         auth.signInWithEmailAndPassword(email, password)
             .then(() => {
-                // Success handled by onAuthStateChanged
+                console.log("Login sukses!");
             })
             .catch(error => {
                 console.error("Login Error:", error);
                 if(loginError) {
-                    loginError.textContent = "Email atau Password salah!";
+                    let msg = "Email atau Password salah!";
+                    if(error.code === 'auth/network-request-failed') msg = "Gangguan koneksi internet.";
+                    if(error.code === 'auth/too-many-requests') msg = "Terlalu banyak percobaan. Coba lagi nanti.";
+                    
+                    loginError.textContent = msg;
                     loginError.classList.remove('hidden'); 
                 }
                 if(btn) {
