@@ -7,13 +7,14 @@ const loginError = document.getElementById('loginError');
 const logoutBtn = document.getElementById('logoutBtn');
 
 // 🔥 Inisialisasi Kalender Premium (Google Style)
-const configFP = {
-    altInput: true,
-    altFormat: "j F Y",
-    dateFormat: "Y-m-d",
-};
-const fpStart = flatpickr("#j_tgl_mulai", configFP);
-const fpEnd = flatpickr("#j_tgl_selesai", configFP);
+let fpStart, fpEnd;
+function initCalendars() {
+    const configFP = { altInput: true, altFormat: "j F Y", dateFormat: "Y-m-d" };
+    const elStart = document.getElementById("j_tgl_mulai");
+    const elEnd = document.getElementById("j_tgl_selesai");
+    if(elStart) fpStart = flatpickr(elStart, configFP);
+    if(elEnd) fpEnd = flatpickr(elEnd, configFP);
+}
 
 // State Global
 let currentSortCol = 'tglMulai';
@@ -22,7 +23,7 @@ let cachedJadwalData = [];
 let cachedMateriData = [];
 let cachedWebinarData = [];
 let deleteTargetId = null; 
-let deleteTargetType = 'jadwal'; // 'jadwal' or 'materi', 'webinar'
+let deleteTargetType = 'jadwal'; 
 
 const imageMap = {
   PAUD:       'https://i.ibb.co.com/gMjGGm9C/1.png',
@@ -36,19 +37,42 @@ const imageMap = {
 
 const bulanMap = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
 
+// Internal Robust Parser (No dependency on main.js)
+function internalCheckIsPast(item) {
+    if(!item) return false;
+    if(item.manualStatus === 'tutup') return true;
+    if(item.manualStatus === 'buka') return false;
+    try {
+        const now = new Date();
+        if(item.tglSelesai) {
+            const d = new Date(item.tglSelesai);
+            if(!isNaN(d)) { d.setHours(23,59,59); return d < now; }
+        }
+        const str = item.tanggal;
+        if(!str || typeof str !== 'string') return false;
+        const parts = str.split(/[–-]/).map(s => s.trim());
+        const lastPart = parts[parts.length - 1];
+        const tokens = (lastPart || "").split(/\s+/);
+        let year = tokens.find(t => t.length === 4 && !isNaN(t));
+        let monthName = tokens.find(t => bulanMap[t]);
+        let day = tokens.find(t => !isNaN(t) && t.length <= 2);
+        if(day && monthName && year) {
+            const d = new Date(parseInt(year), bulanMap[monthName]-1, parseInt(day), 23, 59, 59);
+            return d < now;
+        }
+    } catch(e) {}
+    return false;
+}
+
 function getEffectiveStatus(d) {
-    if (typeof window.checkIsPast === 'function') {
-        return !window.checkIsPast(d);
-    }
-    // Fallback if main.js is not yet loaded
-    const dateEnd = d.tglSelesai ? new Date(d.tglSelesai) : (window.parseDateFromText ? window.parseDateFromText(d.tanggal) : new Date(0));
-    return (dateEnd || new Date(0)) >= new Date();
+    return !internalCheckIsPast(d);
 }
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         loginScreen.classList.add('hidden');
         dashboardScreen.classList.remove('hidden');
+        initCalendars();
         
         // 1. Listen to JADWAL
         db.collection("jadwal").onSnapshot((snapshot) => {
@@ -182,9 +206,22 @@ function loadTable() {
     list.sort((a, b) => {
         let valA, valB;
         if (currentSortCol === 'tglMulai') {
-            const parseFn = (typeof window.parseDateFromText === 'function') ? window.parseDateFromText : (() => null);
-            valA = a.tglMulai ? new Date(a.tglMulai) : (parseFn(a.tanggal) || new Date(0));
-            valB = b.tglMulai ? new Date(b.tglMulai) : (parseFn(b.tanggal) || new Date(0));
+            const getVal = (item) => {
+                if(item.tglMulai) return new Date(item.tglMulai);
+                // Fallback parsing manual
+                const str = item.tanggal;
+                if(!str || typeof str !== 'string') return new Date(0);
+                const parts = str.split(/[–-]/).map(s => s.trim());
+                const lastPart = parts[parts.length - 1];
+                const tokens = (lastPart || "").split(/\s+/);
+                let year = tokens.find(t => t.length === 4 && !isNaN(t));
+                let monthName = tokens.find(t => bulanMap[t]);
+                let day = tokens.find(t => !isNaN(t) && t.length <= 2);
+                if(day && monthName && year) return new Date(parseInt(year), bulanMap[monthName]-1, parseInt(day));
+                return new Date(0);
+            };
+            valA = getVal(a);
+            valB = getVal(b);
             return currentSortDir === 'asc' ? valA - valB : valB - valA;
         } 
         else if (currentSortCol === 'manualStatus') {
