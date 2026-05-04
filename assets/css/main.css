@@ -11,7 +11,12 @@ body {
 }
 
 body.has-fixed-header {
-  padding-top: 75px; /* Offset for fixed header */
+  padding-top: 85px; /* Offset for fixed header */
+}
+
+main {
+  padding-top: 40px !important;
+  padding-bottom: 100px !important;
 }
 
 /* ══ NAVIGATION HEADER ══ */
@@ -25,7 +30,7 @@ body.has-fixed-header {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 10px 40px;
+  padding: 16px 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -37,18 +42,18 @@ body.has-fixed-header {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   text-decoration: none;
   color: #1a3560;
   font-weight: 800;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .nav-links {
   flex: 2;
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 36px;
   list-style: none;
 }
 
