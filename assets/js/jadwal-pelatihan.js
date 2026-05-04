@@ -65,8 +65,8 @@ function render() {
     const active = filtered.filter(d => !isPast(d));
     const inactive = filtered.filter(d => isPast(d));
     const sortFn = (a, b) => {
-        const dA = a.tglMulai ? new Date(a.tglMulai) : (getEndDate(a.tanggal) || new Date(0));
-        const dB = b.tglMulai ? new Date(b.tglMulai) : (getEndDate(b.tanggal) || new Date(0));
+        const dA = a.tglMulai ? new Date(a.tglMulai) : (window.parseDateFromText(a.tanggal) || new Date(0));
+        const dB = b.tglMulai ? new Date(b.tglMulai) : (window.parseDateFromText(b.tanggal) || new Date(0));
         return dA - dB;
     };
     active.sort(sortFn);
