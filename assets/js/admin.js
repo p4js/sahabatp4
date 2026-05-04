@@ -7,23 +7,21 @@ const loginError = document.getElementById('loginError');
 const logoutBtn = document.getElementById('logoutBtn');
 
 // 🔥 Inisialisasi Kalender Premium (Google Style)
-let fpStart, fpEnd;
-function initCalendars() {
-    const configFP = { altInput: true, altFormat: "j F Y", dateFormat: "Y-m-d" };
-    const elStart = document.getElementById("j_tgl_mulai");
-    const elEnd = document.getElementById("j_tgl_selesai");
-    if(elStart) fpStart = flatpickr(elStart, configFP);
-    if(elEnd) fpEnd = flatpickr(elEnd, configFP);
-}
+const configFP = {
+    altInput: true,
+    altFormat: "j F Y",
+    dateFormat: "Y-m-d",
+};
+const fpStart = flatpickr("#j_tgl_mulai", configFP);
+const fpEnd = flatpickr("#j_tgl_selesai", configFP);
 
 // State Global
 let currentSortCol = 'tglMulai';
 let currentSortDir = 'asc';
 let cachedJadwalData = [];
 let cachedMateriData = [];
-let cachedWebinarData = [];
 let deleteTargetId = null; 
-let deleteTargetType = 'jadwal'; 
+let deleteTargetType = 'jadwal'; // 'jadwal' or 'materi'
 
 const imageMap = {
   PAUD:       'https://i.ibb.co.com/gMjGGm9C/1.png',
@@ -37,114 +35,80 @@ const imageMap = {
 
 const bulanMap = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
 
-// Internal Robust Parser (No dependency on main.js)
-function internalCheckIsPast(item) {
-    if(!item) return false;
-    if(item.manualStatus === 'tutup') return true;
-    if(item.manualStatus === 'buka') return false;
+function parseTanggalManual(str) {
+    if(!str) return new Date(0);
     try {
-        const now = new Date();
-        if(item.tglSelesai) {
-            const d = new Date(item.tglSelesai);
-            if(!isNaN(d)) { d.setHours(23,59,59); return d < now; }
-        }
-        const str = item.tanggal;
-        if(!str || typeof str !== 'string') return false;
         const parts = str.split(/[–-]/).map(s => s.trim());
-        const lastPart = parts[parts.length - 1];
-        const tokens = (lastPart || "").split(/\s+/);
+        const lastPart = parts[parts.length - 1]; 
+        const tokens = lastPart.split(/\s+/);
         let year = tokens.find(t => t.length === 4 && !isNaN(t));
         let monthName = tokens.find(t => bulanMap[t]);
         let day = tokens.find(t => !isNaN(t) && t.length <= 2);
-        if(day && monthName && year) {
-            const d = new Date(parseInt(year), bulanMap[monthName]-1, parseInt(day), 23, 59, 59);
-            return d < now;
-        }
+        if(day && monthName && year) return new Date(parseInt(year), bulanMap[monthName]-1, parseInt(day));
     } catch(e) {}
-    return false;
+    return new Date(0);
 }
 
-function getEffectiveStatus(d) {
-    return !internalCheckIsPast(d);
-}
-
-if (auth) {
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            loginScreen.classList.add('hidden');
-            dashboardScreen.classList.remove('hidden');
-            initCalendars();
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        loginScreen.classList.add('hidden');
+        dashboardScreen.classList.remove('hidden');
         
         // 1. Listen to JADWAL
         db.collection("jadwal").onSnapshot((snapshot) => {
-            try {
-                const list = [];
-                snapshot.forEach(doc => {
-                    let item = doc.data();
-                    item.id = doc.id;
-                    list.push(item);
-                });
-                cachedJadwalData = list;
-                loadTable();
-            } catch (err) {
-                console.error("Jadwal Listener Error:", err);
-            }
+            const list = [];
+            snapshot.forEach(doc => {
+                let item = doc.data();
+                item.id = doc.id;
+                list.push(item);
+            });
+            cachedJadwalData = list;
+            loadTable();
         });
 
         // 2. Listen to MATERI (Unified for Dashboard & Table)
         db.collection("materi").onSnapshot((snapshot) => {
-            try {
-                const list = [];
-                snapshot.forEach(doc => {
-                    let item = doc.data();
-                    item.id = doc.id;
-                    list.push(item);
-                });
-                cachedMateriData = list;
-                
-                updateDashboard(); // Update Statistik Dashboard
-                loadTableMateri(); // Update Tabel Materi
-                
-                // Auto-seed if empty
-                if (list.length === 0) {
-                    console.log("Database materi kosong, memulai impor otomatis...");
-                    autoSeedMateri();
-                }
-            } catch (err) {
-                console.error("Materi Listener Error:", err);
+            const list = [];
+            snapshot.forEach(doc => {
+                let item = doc.data();
+                item.id = doc.id;
+                list.push(item);
+            });
+            cachedMateriData = list;
+            
+            updateDashboard(); // Update Statistik Dashboard
+            loadTableMateri(); // Update Tabel Materi
+            
+            // Auto-seed if empty
+            if (list.length === 0) {
+                console.log("Database materi kosong, memulai impor otomatis...");
+                autoSeedMateri();
             }
         });
 
         // 3. Listen to WEBINAR
         db.collection("webinars").onSnapshot((snapshot) => {
-            try {
-                const list = [];
-                snapshot.forEach(doc => {
-                    let item = doc.data();
-                    item.id = doc.id;
-                    list.push(item);
-                });
-                cachedWebinarData = list;
-                loadTableWebinar();
-    
-                // Auto-seed if empty
-                if (list.length === 0) {
-                    console.log("Database webinar kosong, memulai impor otomatis...");
-                    autoSeedWebinars();
-                }
-            } catch (err) {
-                console.error("Webinar Listener Error:", err);
+            const list = [];
+            snapshot.forEach(doc => {
+                let item = doc.data();
+                item.id = doc.id;
+                list.push(item);
+            });
+            cachedWebinarData = list;
+            loadTableWebinar();
+
+            // Auto-seed if empty
+            if (list.length === 0) {
+                console.log("Database webinar kosong, memulai impor otomatis...");
+                autoSeedWebinars();
             }
         });
 
-        } else {
-            loginScreen.classList.remove('hidden');
-            dashboardScreen.classList.add('hidden');
-        }
-    });
-} else {
-    console.error("Firebase Auth tidak tersedia.");
-}
+    } else {
+        loginScreen.classList.remove('hidden');
+        dashboardScreen.classList.add('hidden');
+    }
+});
 
 function formatTrainingDate(startStr, endStr) {
     if(!startStr || !endStr) return "";
@@ -210,22 +174,8 @@ function loadTable() {
     list.sort((a, b) => {
         let valA, valB;
         if (currentSortCol === 'tglMulai') {
-            const getVal = (item) => {
-                if(item.tglMulai) return new Date(item.tglMulai);
-                // Fallback parsing manual
-                const str = item.tanggal;
-                if(!str || typeof str !== 'string') return new Date(0);
-                const parts = str.split(/[–-]/).map(s => s.trim());
-                const lastPart = parts[parts.length - 1];
-                const tokens = (lastPart || "").split(/\s+/);
-                let year = tokens.find(t => t.length === 4 && !isNaN(t));
-                let monthName = tokens.find(t => bulanMap[t]);
-                let day = tokens.find(t => !isNaN(t) && t.length <= 2);
-                if(day && monthName && year) return new Date(parseInt(year), bulanMap[monthName]-1, parseInt(day));
-                return new Date(0);
-            };
-            valA = getVal(a);
-            valB = getVal(b);
+            valA = a.tglMulai ? new Date(a.tglMulai) : parseTanggalManual(a.tanggal);
+            valB = b.tglMulai ? new Date(b.tglMulai) : parseTanggalManual(b.tanggal);
             return currentSortDir === 'asc' ? valA - valB : valB - valA;
         } 
         else if (currentSortCol === 'manualStatus') {
@@ -250,29 +200,25 @@ function loadTable() {
         html = '<tr><td colspan="6">Data tidak ditemukan.</td></tr>';
     } else {
         list.forEach((d) => {
-            try {
-                const isBuka = getEffectiveStatus(d);
-                html += `
-                    <tr>
-                        <td><strong>${d.judul}</strong></td>
-                        <td>${d.tanggal}</td>
-                        <td>${d.jenjang}</td>
-                        <td>${d.kuota}</td>
-                        <td>
-                            <label class="switch">
-                                <input type="checkbox" ${isBuka ? 'checked' : ''} onchange="toggleStatus('${d.id}', this.checked)">
-                                <span class="slider"></span>
-                            </label>
-                        </td>
-                        <td style="white-space: nowrap;">
-                            <button class="btn-edit" onclick="editJadwal('${d.id}')">Edit</button>
-                            <button class="btn-delete" onclick="deleteJadwal('${d.id}')">Hapus</button>
-                        </td>
-                    </tr>
-                `;
-            } catch (err) {
-                console.error("Error rendering row:", err, d);
-            }
+            const isBuka = getEffectiveStatus(d);
+            html += `
+                <tr>
+                    <td><strong>${d.judul}</strong></td>
+                    <td>${d.tanggal}</td>
+                    <td>${d.jenjang}</td>
+                    <td>${d.kuota}</td>
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" ${isBuka ? 'checked' : ''} onchange="toggleStatus('${d.id}', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn-edit" onclick="editJadwal('${d.id}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteJadwal('${d.id}')">Hapus</button>
+                    </td>
+                </tr>
+            `;
         });
     }
         tbodyJadwal.innerHTML = html;
@@ -944,44 +890,19 @@ window.logout = logout;
 if(loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const emailInput = document.getElementById('loginEmail');
-        const passInput = document.getElementById('loginPassword');
-        const btn = document.getElementById('loginBtn');
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const btn = loginForm.querySelector('button');
         
-        if(!emailInput || !passInput) return;
-        
-        const email = emailInput.value.trim();
-        const password = passInput.value.trim();
-        
-        if(btn) {
-            btn.textContent = 'Memverifikasi...';
-            btn.disabled = true;
-        }
-
-        if(!auth) {
-            alert("Layanan Keamanan (Firebase Auth) gagal dimuat. Mohon refresh halaman.");
-            if(btn) { btn.textContent = 'Login'; btn.disabled = false; }
-            return;
-        }
+        btn.textContent = 'Membuka Kunci...';
+        btn.disabled = true;
 
         auth.signInWithEmailAndPassword(email, password)
-            .then(() => {
-                console.log("Login sukses!");
-            })
             .catch(error => {
-                console.error("Login Error:", error);
-                if(loginError) {
-                    let msg = "Email atau Password salah!";
-                    if(error.code === 'auth/network-request-failed') msg = "Gangguan koneksi internet.";
-                    if(error.code === 'auth/too-many-requests') msg = "Terlalu banyak percobaan. Coba lagi nanti.";
-                    
-                    loginError.textContent = msg;
-                    loginError.classList.remove('hidden'); 
-                }
-                if(btn) {
-                    btn.textContent = 'Login';
-                    btn.disabled = false;
-                }
+                loginError.textContent = "Email atau Password salah!";
+                loginError.classList.remove('hidden');
+                btn.textContent = 'Login Admin';
+                btn.disabled = false;
             });
     });
 }

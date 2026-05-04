@@ -40,8 +40,25 @@ let activeFilter = 'semua';
 let statusFilter = 'semua';
 let currentSort = 'tanggal';
 
+const bulanMap = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
+
+function getEndDate(tanggalStr) {
+  if(!tanggalStr) return null;
+  const parts = tanggalStr.split(/[–-]/).map(s => s.trim());
+  const lastPart = parts[parts.length - 1]; 
+  const tokens = lastPart.split(/\s+/);
+  const day = parseInt(tokens.find(t => !isNaN(t)));
+  const month = bulanMap[tokens.find(t => bulanMap[t])];
+  const year = parseInt(tokens.find(t => t.length === 4));
+  return (day && month && year) ? new Date(year, month-1, day, 23, 59, 59) : null;
+}
+
 function isPast(item) {
-  return window.checkIsPast(item);
+  if(item.manualStatus === 'tutup') return true;
+  if(item.manualStatus === 'buka') return false;
+  if(item.tglSelesai) return new Date(item.tglSelesai) < new Date();
+  const end = getEndDate(item.tanggal);
+  return end ? end < new Date() : false;
 }
 
 function render() {
@@ -65,8 +82,8 @@ function render() {
     const active = filtered.filter(d => !isPast(d));
     const inactive = filtered.filter(d => isPast(d));
     const sortFn = (a, b) => {
-        const dA = a.tglMulai ? new Date(a.tglMulai) : (window.parseDateFromText(a.tanggal) || new Date(0));
-        const dB = b.tglMulai ? new Date(b.tglMulai) : (window.parseDateFromText(b.tanggal) || new Date(0));
+        const dA = a.tglMulai ? new Date(a.tglMulai) : (getEndDate(a.tanggal) || new Date(0));
+        const dB = b.tglMulai ? new Date(b.tglMulai) : (getEndDate(b.tanggal) || new Date(0));
         return dA - dB;
     };
     active.sort(sortFn);
@@ -81,28 +98,24 @@ function render() {
   } else {
     html += `<div class="grid">`;
     filtered.forEach(d => {
-        try {
-            const cm = colorMap[d.jenjang] || colorMap['SLB'];
-            const img = imageMap[d.jenjang] || imageMap['SD'];
-            const closed = isPast(d);
-            html += `
-                <div class="card ${closed ? 'card-closed' : ''}">
-                    <div class="card-img-wrap"><img src="${img}" alt="${d.jenjang}" loading="lazy" /></div>
-                    <div class="card-banner ${cm.banner}"></div>
-                    <div class="card-body">
-                        <span class="card-badge ${cm.badge}">${d.jenjang}</span>
-                        <p class="card-title">${d.judul}</p>
-                        <div class="card-info"><div class="card-info-row">${d.tanggal}</div></div>
-                        <span class="kuota-badge">Kuota ${d.kuota} peserta</span>
-                    </div>
-                    <div class="card-footer">
-                        ${closed ? `<span class="btn-daftar ditutup">Pendaftaran Ditutup</span>` : `<a href="${d.link}" class="btn-daftar" target="_blank">Daftar Sekarang</a>`}
-                    </div>
+        const cm = colorMap[d.jenjang] || colorMap['SLB'];
+        const img = imageMap[d.jenjang] || imageMap['SD'];
+        const closed = isPast(d);
+        html += `
+            <div class="card ${closed ? 'card-closed' : ''}">
+                <div class="card-img-wrap"><img src="${img}" alt="${d.jenjang}" loading="lazy" /></div>
+                <div class="card-banner ${cm.banner}"></div>
+                <div class="card-body">
+                    <span class="card-badge ${cm.badge}">${d.jenjang}</span>
+                    <p class="card-title">${d.judul}</p>
+                    <div class="card-info"><div class="card-info-row">${d.tanggal}</div></div>
+                    <span class="kuota-badge">Kuota ${d.kuota} peserta</span>
                 </div>
-            `;
-        } catch (e) {
-            console.error("Error rendering card:", e, d);
-        }
+                <div class="card-footer">
+                    ${closed ? `<span class="btn-daftar ditutup">Pendaftaran Ditutup</span>` : `<a href="${d.link}" class="btn-daftar" target="_blank">Daftar Sekarang</a>`}
+                </div>
+            </div>
+        `;
     });
     html += `</div>`;
   }
