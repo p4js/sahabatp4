@@ -36,7 +36,12 @@ const imageMap = {
 const bulanMap = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
 
 function getEffectiveStatus(d) {
-    return !window.checkIsPast(d);
+    if (typeof window.checkIsPast === 'function') {
+        return !window.checkIsPast(d);
+    }
+    // Fallback if main.js is not yet loaded
+    const dateEnd = d.tglSelesai ? new Date(d.tglSelesai) : (window.parseDateFromText ? window.parseDateFromText(d.tanggal) : new Date(0));
+    return (dateEnd || new Date(0)) >= new Date();
 }
 
 auth.onAuthStateChanged(async (user) => {
@@ -190,25 +195,29 @@ function loadTable() {
         html = '<tr><td colspan="6">Data tidak ditemukan.</td></tr>';
     } else {
         list.forEach((d) => {
-            const isBuka = getEffectiveStatus(d);
-            html += `
-                <tr>
-                    <td><strong>${d.judul}</strong></td>
-                    <td>${d.tanggal}</td>
-                    <td>${d.jenjang}</td>
-                    <td>${d.kuota}</td>
-                    <td>
-                        <label class="switch">
-                            <input type="checkbox" ${isBuka ? 'checked' : ''} onchange="toggleStatus('${d.id}', this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                    </td>
-                    <td style="white-space: nowrap;">
-                        <button class="btn-edit" onclick="editJadwal('${d.id}')">Edit</button>
-                        <button class="btn-delete" onclick="deleteJadwal('${d.id}')">Hapus</button>
-                    </td>
-                </tr>
-            `;
+            try {
+                const isBuka = getEffectiveStatus(d);
+                html += `
+                    <tr>
+                        <td><strong>${d.judul}</strong></td>
+                        <td>${d.tanggal}</td>
+                        <td>${d.jenjang}</td>
+                        <td>${d.kuota}</td>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" ${isBuka ? 'checked' : ''} onchange="toggleStatus('${d.id}', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td style="white-space: nowrap;">
+                            <button class="btn-edit" onclick="editJadwal('${d.id}')">Edit</button>
+                            <button class="btn-delete" onclick="deleteJadwal('${d.id}')">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            } catch (err) {
+                console.error("Error rendering row:", err, d);
+            }
         });
     }
         tbodyJadwal.innerHTML = html;
