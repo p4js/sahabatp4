@@ -40,25 +40,8 @@ let activeFilter = 'semua';
 let statusFilter = 'semua';
 let currentSort = 'tanggal';
 
-const bulanMap = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
-
-function getEndDate(tanggalStr) {
-  if(!tanggalStr) return null;
-  const parts = tanggalStr.split(/[–-]/).map(s => s.trim());
-  const lastPart = parts[parts.length - 1]; 
-  const tokens = lastPart.split(/\s+/);
-  const day = parseInt(tokens.find(t => !isNaN(t)));
-  const month = bulanMap[tokens.find(t => bulanMap[t])];
-  const year = parseInt(tokens.find(t => t.length === 4));
-  return (day && month && year) ? new Date(year, month-1, day, 23, 59, 59) : null;
-}
-
 function isPast(item) {
-  if(item.manualStatus === 'tutup') return true;
-  if(item.manualStatus === 'buka') return false;
-  if(item.tglSelesai) return new Date(item.tglSelesai) < new Date();
-  const end = getEndDate(item.tanggal);
-  return end ? end < new Date() : false;
+  return window.checkIsPast(item);
 }
 
 function render() {

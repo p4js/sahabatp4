@@ -35,18 +35,8 @@ const imageMap = {
 
 const bulanMap = {'Januari':1,'Februari':2,'Maret':3,'April':4,'Mei':5,'Juni':6,'Juli':7,'Agustus':8,'September':9,'Oktober':10,'November':11,'Desember':12};
 
-function parseTanggalManual(str) {
-    if(!str) return new Date(0);
-    try {
-        const parts = str.split(/[–-]/).map(s => s.trim());
-        const lastPart = parts[parts.length - 1]; 
-        const tokens = lastPart.split(/\s+/);
-        let year = tokens.find(t => t.length === 4 && !isNaN(t));
-        let monthName = tokens.find(t => bulanMap[t]);
-        let day = tokens.find(t => !isNaN(t) && t.length <= 2);
-        if(day && monthName && year) return new Date(parseInt(year), bulanMap[monthName]-1, parseInt(day));
-    } catch(e) {}
-    return new Date(0);
+function getEffectiveStatus(d) {
+    return !window.checkIsPast(d);
 }
 
 auth.onAuthStateChanged(async (user) => {
@@ -174,8 +164,8 @@ function loadTable() {
     list.sort((a, b) => {
         let valA, valB;
         if (currentSortCol === 'tglMulai') {
-            valA = a.tglMulai ? new Date(a.tglMulai) : parseTanggalManual(a.tanggal);
-            valB = b.tglMulai ? new Date(b.tglMulai) : parseTanggalManual(b.tanggal);
+            valA = a.tglMulai ? new Date(a.tglMulai) : (window.parseDateFromText(a.tanggal) || new Date(0));
+            valB = b.tglMulai ? new Date(b.tglMulai) : (window.parseDateFromText(b.tanggal) || new Date(0));
             return currentSortDir === 'asc' ? valA - valB : valB - valA;
         } 
         else if (currentSortCol === 'manualStatus') {
