@@ -8,6 +8,9 @@ body {
   background: #ffffff;
   color: #1a2940;
   line-height: 1.6;
+}
+
+body.has-fixed-header {
   padding-top: 75px; /* Offset for fixed header */
 }
 
