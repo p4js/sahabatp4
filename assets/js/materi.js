@@ -224,9 +224,19 @@ function openMateriModal(id) {
                 ${t.link
                   ? `
                     <button class="btn-unduh" onclick="trackView('${p.id}', ${idx}); openPdf('${t.link}', '${(t.nama || p.judul).replace(/'/g,"\\'")}')">Buka Materi</button>
+                  `
+                  : ''}
+                ${t.videoLink
+                  ? `
+                    <a href="${t.videoLink}" target="_blank" class="btn-video" onclick="trackView('${p.id}', ${idx})"><i class="fab fa-youtube"></i> Tonton Video</a>
+                  `
+                  : ''}
+                ${t.link
+                  ? `
                     <a href="${getDirectDownloadLink(t.link)}" target="_blank" class="btn-download-direct" onclick="trackView('${p.id}', ${idx})" title="Download Langsung">Unduh</a>
                   `
-                  : `<span class="btn-unduh btn-disabled">Segera Hadir</span>`}
+                  : ''}
+                ${(!t.link && !t.videoLink) ? `<span class="btn-unduh btn-disabled">Segera Hadir</span>` : ''}
               </div>
             </div>
           `).join('');
