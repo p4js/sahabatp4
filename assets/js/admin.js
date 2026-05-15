@@ -360,7 +360,7 @@ window.sortMateriTable = function(col) {
     loadTableMateri();
 }
 
-window.addTopikRow = function(data = {label:'', nama:'', deskripsi:'', link:'', views:0}) {
+window.addTopikRow = function(data = {label:'', nama:'', deskripsi:'', link:'', videoLink:'', views:0}) {
     const div = document.createElement('div');
     div.className = 'topik-form-item';
     div.style = 'background:#fdfdfd; border:1px solid #e2e8f0; border-radius:10px; padding:15px; margin-bottom:15px; position:relative; transition:0.3s;';
@@ -390,9 +390,15 @@ window.addTopikRow = function(data = {label:'', nama:'', deskripsi:'', link:'', 
             <label style="font-size:10px; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">DESKRIPSI TOPIK</label>
             <textarea placeholder="Jelaskan isi topik ini..." class="t-desc" style="width:100%; font-size:12px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; height:60px; resize:none;">${data.deskripsi || ''}</textarea>
         </div>
-        <div style="margin-top:12px;">
-            <label style="font-size:10px; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">LINK DOKUMEN (GDRIVE/PDF)</label>
-            <input type="url" placeholder="https://drive.google.com/..." class="t-link" value="${data.link || ''}" style="width:100%; font-size:12px; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+        <div style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div>
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">LINK DOKUMEN (GDRIVE/PDF)</label>
+                <input type="url" placeholder="https://drive.google.com/..." class="t-link" value="${data.link || ''}" style="width:100%; font-size:12px; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+            </div>
+            <div>
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">LINK VIDEO (YOUTUBE - OPSIONAL)</label>
+                <input type="url" placeholder="https://youtube.com/watch?v=..." class="t-video" value="${data.videoLink || ''}" style="width:100%; font-size:12px; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+            </div>
         </div>
         <input type="hidden" class="t-views" value="${data.views || 0}">
     `;
@@ -452,6 +458,7 @@ document.getElementById('formMateri').addEventListener('submit', async (e) => {
                 nama: nama,
                 deskripsi: item.querySelector('.t-desc').value,
                 link: item.querySelector('.t-link').value,
+                videoLink: item.querySelector('.t-video').value,
                 views: parseInt(item.querySelector('.t-views').value || 0)
             });
         }
