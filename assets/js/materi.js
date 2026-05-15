@@ -228,7 +228,7 @@ function openMateriModal(id) {
                   : ''}
                 ${t.videoLink
                   ? `
-                    <a href="${t.videoLink}" target="_blank" class="btn-video" onclick="trackView('${p.id}', ${idx})"><i class="fab fa-youtube"></i> Tonton Video</a>
+                    <button class="btn-video" onclick="trackView('${p.id}', ${idx}); openVideoModal('${t.videoLink}', '${(t.nama || p.judul).replace(/'/g,"\\'")}')"><i class="fab fa-youtube"></i> Tonton Video</button>
                   `
                   : ''}
                 ${t.link
@@ -323,10 +323,50 @@ window.closePdfOnBg = function(e) {
   if (e.target === document.getElementById('pdfOverlay')) closePdfModal();
 }
 
+// ══ VIDEO MODAL FUNCTIONS ══
+function youtubeToEmbed(url) {
+  if (!url) return '';
+  let videoId = '';
+  if (url.includes('youtube.com/watch?v=')) {
+    videoId = url.split('v=')[1].split('&')[0];
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1].split('?')[0];
+  } else if (url.includes('youtube.com/embed/')) {
+    return url;
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+}
+
+window.openVideoModal = function(url, title) {
+  const overlay = document.getElementById('videoOverlay');
+  const frame = document.getElementById('videoFrame');
+  const modalTitle = document.getElementById('videoModalTitle');
+
+  if (overlay && frame) {
+    frame.src = youtubeToEmbed(url);
+    if (modalTitle) modalTitle.innerText = title;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+window.closeVideoModal = function() {
+  const overlay = document.getElementById('videoOverlay');
+  const frame = document.getElementById('videoFrame');
+  if (overlay) overlay.classList.remove('open');
+  if (frame) frame.src = '';
+  document.body.style.overflow = '';
+}
+
+window.closeVideoOnBg = function(e) {
+  if (e.target.id === 'videoOverlay') closeVideoModal();
+}
+
 document.addEventListener('keydown', e => { 
     if (e.key === 'Escape') { 
         closeModal(); 
         closePdfModal(); 
+        closeVideoModal();
     } 
 });
 
