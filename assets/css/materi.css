@@ -468,22 +468,24 @@
 .btn-video {
     display: block;
     text-align: center;
-    background: #f6ffed;
-    color: #389e0d;
+    background: #0e7c61; /* Hijau pekat senada dengan Sahabat P4 */
+    color: #fff;
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #b7eb8f;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
     transition: 0.3s;
     margin-top: 4px;
     cursor: pointer;
+    box-shadow: 0 4px 10px rgba(14, 124, 97, 0.2);
 }
 
 .btn-video:hover {
-    background: #d9f7be;
-    transform: translateY(-1px);
+    background: #0b614c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(14, 124, 97, 0.3);
 }
 
 .btn-video i {
