@@ -45,6 +45,19 @@
   </div>
 </div>
 
+<!-- Video Player Modal -->
+<div class="video-overlay" id="videoOverlay" onclick="closeVideoOnBg(event)">
+  <div class="video-modal">
+    <div class="video-modal-header">
+      <p class="video-modal-title" id="videoModalTitle">Judul Video...</p>
+      <button class="video-close-btn" onclick="closeVideoModal()">×</button>
+    </div>
+    <div class="video-frame-wrap">
+      <iframe id="videoFrame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Detail Topik -->
 <div class="overlay" id="overlay" onclick="closeOnBg(event)">
   <div class="modal" id="modal">
