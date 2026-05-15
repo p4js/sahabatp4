@@ -465,6 +465,30 @@
     background: #fef3c7;
 }
 
+.btn-video {
+    display: block;
+    text-align: center;
+    background: #fff1f0;
+    color: #cf1322;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ffa39e;
+    transition: 0.3s;
+    margin-top: 4px;
+}
+
+.btn-video:hover {
+    background: #ffccc7;
+    transform: translateY(-1px);
+}
+
+.btn-video i {
+    margin-right: 4px;
+}
+
 /* ANIMASI KARTU */
 .materi-card {
     animation: fadeInUp 0.5s ease forwards;
