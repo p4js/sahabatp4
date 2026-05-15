@@ -173,8 +173,8 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 200;
+  background: rgba(0,0,0,0.5); /* Gelap sedikit pekat */
+  z-index: 2000; /* Di atas header (1000) */
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -307,7 +307,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.65);
-  z-index: 500;
+  z-index: 3000; /* Sangat tinggi */
   align-items: center;
   justify-content: center;
   padding: 16px;
@@ -514,7 +514,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.75);
-  z-index: 600;
+  z-index: 4000; /* Paling tinggi */
   align-items: center;
   justify-content: center;
   padding: 16px;
