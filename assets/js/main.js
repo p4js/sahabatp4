@@ -21,8 +21,6 @@ function injectHeader() {
     const headerPlaceholder = document.getElementById('main-header');
     if (!headerPlaceholder) return;
 
-    document.body.classList.add('has-fixed-header');
-
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
     const navItems = [
